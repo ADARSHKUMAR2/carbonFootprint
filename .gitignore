@@ -1,0 +1,64 @@
+# ==========================================
+# 🛑 SECURITY: NEVER COMMIT SECRETS
+# ==========================================
+.env
+.env.local
+.env.*.local
+*.pem
+
+# ==========================================
+# 🐍 BACKEND: Python & FastAPI
+# ==========================================
+# Virtual Environments
+.venv/
+venv/
+env/
+
+# Byte-compiled / Optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Testing & Linting Caches
+.pytest_cache/
+.coverage
+.ruff_cache/
+.mypy_cache/
+
+# ==========================================
+# ⚛️ FRONTEND: Node, Vite & React
+# ==========================================
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production Build Outputs
+dist/
+dist-ssr/
+build/
+
+# Package Manager Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================================
+# 💻 OS & IDE FILES
+# ==========================================
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
