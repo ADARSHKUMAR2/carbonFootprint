@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     DATABASE_URL: PostgresDsn
     SUPABASE_JWT_SECRET: SecretStr
     OPENAI_API_KEY: SecretStr
+    SUPABASE_ANON_KEY: SecretStr
+    SUPABASE_URL: str
 
 
 # Global instantiation to import across the app layer

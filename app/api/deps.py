@@ -1,4 +1,5 @@
 import jwt
+from jwt import PyJWKClient
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -6,15 +7,16 @@ from app.core.config import settings
 from app.database.session import SessionLocal
 from app.database.models import Profile
 
-# This tells FastAPI to look for an "Authorization: Bearer <token>" header in incoming requests
 security = HTTPBearer()
+
+# Asymmetrically signed JWTs are validated against a JSON Web Key Set (JWKS).
+# The public keys are fetched from this public endpoint. This was likely the
+# original intent, as it's more secure and flexible than using a shared secret.
+jwks_url = f"{settings.SUPABASE_URL}/auth/v1/.well-known/jwks.json"
+jwks_client = PyJWKClient(jwks_url)
 
 
 def get_db():
-    """
-    Yields a database session for the duration of a single web request,
-    ensuring it safely closes as soon as the request is finished.
-    """
     db = SessionLocal()
     try:
         yield db
@@ -26,10 +28,6 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
 ) -> Profile:
-    """
-    Intercepts the JWT token, verifies it against the Supabase Secret,
-    and returns the authorized user's database Profile.
-    """
     token = credentials.credentials
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -38,25 +36,55 @@ def get_current_user(
     )
 
     try:
-        # Supabase signs all JWTs using your project's unique secret and the HS256 algorithm
+        # ADD THIS TO DEBUG:
+        unverified_payload = jwt.decode(token, options={"verify_signature": False})
+        print(f"DEBUG: Token payload is: {unverified_payload}")
+        print(f"DEBUG: Token header is: {jwt.get_unverified_header(token)}")
+
+        # Fetch the signing key from the JWKS endpoint.
+        # This is the standard approach for RS256-signed tokens.
+        signing_key = jwks_client.get_signing_key_from_jwt(token)
+
+        # Decode the token using the fetched public key
         payload = jwt.decode(
             token,
-            settings.SUPABASE_JWT_SECRET.get_secret_value(),
-            algorithms=["HS256"],
-            options={"verify_aud": False},
+            signing_key.key,
+            algorithms=[
+                "ES256"
+            ],  # The error indicates the token uses an algorithm other than HS256
+            audience="authenticated",
+            options={
+                "verify_aud": False,
+                "verify_iss": False,  # Temporarily relax issuer check to rule it out
+            },
         )
 
-        # 'sub' (subject) is the standard JWT field where Supabase stores the auth.users.id
         user_id: str = payload.get("sub")
         if user_id is None:
+            print("🚨 JWT Error: Token payload is missing the 'sub' field.")
             raise credentials_exception
-
-    except jwt.PyJWTError:
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except jwt.InvalidAudienceError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect audience",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except jwt.PyJWTError as e:
+        # This will catch errors from get_signing_key_from_jwt if the token is malformed
+        # or if there's an issue fetching/finding the key.
+        print(f"🚨 JWT Error: {str(e)}")
         raise credentials_exception
 
-    # Verify the user actually exists in our local profiles table
+    # Verify the user actually exists in our local database
     user = db.query(Profile).filter(Profile.id == user_id).first()
     if not user:
+        print(f"🚨 DB Error: User {user_id} is missing from the local database!")
         raise HTTPException(
             status_code=404, detail="User profile not found in database."
         )

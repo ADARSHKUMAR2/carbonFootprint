@@ -1,5 +1,5 @@
 from typing import Dict, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class CarbonAnalysisResponse(BaseModel):
@@ -8,6 +8,7 @@ class CarbonAnalysisResponse(BaseModel):
     The AI is forced to return a JSON object matching this exact structure.
     """
 
+    model_config = ConfigDict(from_attributes=True)
     total_co2_kg: float = Field(
         description="Total calculated CO2 equivalent for the context window in kilograms."
     )
