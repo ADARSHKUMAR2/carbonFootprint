@@ -24,8 +24,8 @@ export default function Auth() {
   };
 
   return (
-    <div className="max-w-md w-full mx-auto bg-white p-8 border rounded-xl shadow-sm mt-10">
-      <h2 className="text-2xl font-bold text-center mb-6">Sign In</h2>
+    <div className="max-w-md w-full mx-auto bg-white p-8 border border-gray-200 rounded-xl shadow-lg mt-10">
+      <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">Welcome Back!</h2>
       {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm mb-4">{error}</div>}
       
       <form onSubmit={handleLogin} className="space-y-4">
@@ -35,7 +35,7 @@ export default function Auth() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out"
             required
           />
         </div>
@@ -45,14 +45,14 @@ export default function Auth() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out"
             required
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 flex justify-center items-center"
+          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-md hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-200 ease-in-out flex justify-center items-center font-semibold"
         >
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
         </button>
