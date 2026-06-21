@@ -1,73 +1,99 @@
-# React + TypeScript + Vite
+# Carbon Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Vite + React + TypeScript UI for the **Personal Carbon Footprint AI Dashboard**.
 
-Currently, two official plugins are available:
+It provides:
+- Supabase auth (JWT via `supabase.ts`)
+- Carbon coach chat UI that calls the backend streaming endpoint
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Prerequisites
+- Node.js 18+
+- A running backend (`carbon-backend`) and its API URL
+- A Supabase project (URL + anon key)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## Environment Variables
+Create a `.env` file in `carbon-frontend/`.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+> Note: The exact variable names depend on how `src/lib/supabase.ts` is implemented. If your app fails to start, mirror the keys expected by `supabase.ts`.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Common keys you may need:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+```env
+VITE_SUPABASE_URL="https://YOUR_PROJECT_REF.supabase.co"
+VITE_SUPABASE_ANON_KEY="your-supabase-anon-key"
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Backend base URL for API requests
+VITE_API_BASE_URL="http://localhost:8000/api/v1"
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+If your code uses different names, update them accordingly.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Install & Run (Local)
+
+From repo root:
+
+```bash
+cd carbon-frontend
+npm install
+npm run dev
 ```
+
+By default Vite serves on:
+- `http://localhost:5173`
+
+---
+
+## Build
+
+```bash
+cd carbon-frontend
+npm run build
+```
+
+---
+
+## Backend Integration
+
+The frontend calls the backend streaming endpoint exposed by:
+- `POST /api/v1/carbon/stream`
+
+CORS is configured in the backend for Vite dev ports:
+- `http://localhost:5173`
+- `http://127.0.0.1:5173`
+
+---
+
+## UI Pages / Components
+
+- `src/components/Auth.tsx`
+  - Supabase sign-in/up UI and session handling
+- `src/components/carbonChat.tsx`
+  - Chat input + message rendering
+  - Calls the backend and updates the UI with the streamed AI response
+
+---
+
+## Expected Response Shape
+
+The backend returns a strict `CarbonAnalysisResponse` contract.
+Your UI should be prepared to read:
+- `total_co2_kg`
+- `category_breakdown` (transport/diet/energy/waste)
+- `largest_emission_source`
+- `summary_message`
+- `personalized_action_plan` (3 strings)
+
+---
+
+## Troubleshooting
+
+- **CORS errors**: ensure the backend is running and allow origins include your Vite dev URL.
+- **401 / auth errors**: ensure you are logged in via Supabase and your JWT is attached to requests.
+- **Missing env vars**: check `src/lib/supabase.ts` for required environment variable names.
+
